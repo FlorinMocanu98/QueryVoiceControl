@@ -1,0 +1,228 @@
+﻿@model QueryVoiceControl.ViewModel.IndexViewModel
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.1/css/font-awesome.min.css" />
+    <style type="text/css">
+
+        body {
+            font-family: verdana;
+        }
+
+        button {
+            margin-top: 9%;
+            float: right;
+            backface-visibility: hidden;
+            position: absolute;
+            cursor: pointer;
+            display: inline-block;
+            white-space: nowrap;
+            background: #e74;
+            border-radius: 500px;
+            border: 0px solid #444;
+            border-width: 0px 0px 0px 0px;
+            padding: 10px 15px 10px 43px;
+            color: #fff;
+            font-size: 16px;
+            font-family: Helvetica Neue;
+            font-weight: 900;
+            font-style: normal;
+            margin-left: 1%;
+            box-shadow: 0px 0px 7px rgba(66,66,66,.75);
+        }
+
+            button > div {
+                color: #999;
+                font-size: 10px;
+                font-family: Helvetica Neue;
+                font-weight: initial;
+                font-style: normal;
+                text-align: center;
+                margin: 0px 0px 0px 0px
+            }
+
+            button > i {
+                color: #e21;
+                font-size: 1em;
+                background: #fff;
+                border-radius: 500px;
+                border: 0px solid transparent;
+                border-width: 0px 0px 0px 0px;
+                padding: 8px 8px 8px 8px;
+                float: left;
+                position: absolute;
+                margin-left: 6px;
+                margin-top: 3px;
+                top: 0px;
+                left: 0px
+            }
+
+            button > .ld {
+                font-size: initial
+            }
+
+
+        #result {
+            font-size: 12px;
+            border-width: 1px;
+            border-color: #F9DFD0;
+            background-color: #F5E9E2;
+            color: #000000;
+            border-style: solid;
+            border-radius: 3px;
+            box-shadow: 0px 0px 7px rgba(66,66,66,.75);
+            margin-top: 5%;
+            height: 10vw;
+            width: 70%;
+            word-wrap: break-word;
+            margin-bottom: 30px;
+            margin-left: 2%;
+        }
+
+        textarea {
+            resize: none;
+        }
+
+        table.MyTable {
+            font-family: Tahoma, Geneva, sans-serif;
+            background-color: #FFFFFF;
+            width: 100%;
+            text-align: center;
+        }
+
+            table.MyTable td, table.MyTable th {
+                padding: 3px 2px;
+            }
+
+            table.MyTable tbody td {
+                font-size: 15px;
+            }
+
+            table.MyTable thead {
+                background: #000000;
+                background: -moz-linear-gradient(top, #404040 0%, #191919 66%, #000000 100%);
+                background: -webkit-linear-gradient(top, #404040 0%, #191919 66%, #000000 100%);
+                background: linear-gradient(to bottom, #404040 0%, #191919 66%, #000000 100%);
+                border-bottom: 3px solid #FF9400;
+                color: #FFFFFF;
+            }
+
+                table.MyTable thead th {
+                    font-size: 15px;
+                    font-weight: bold;
+                    color: #FFFFFF;
+                    text-align: center;
+                }
+
+            table.MyTable tfoot td {
+                font-size: 14px;
+            }
+
+            table.MyTable tfoot .links {
+                text-align: right;
+            }
+
+                table.MyTable tfoot .links a {
+                    display: inline-block;
+                    background: #1C6EA4;
+                    color: #FFFFFF;
+                    padding: 2px 8px;
+                    border-radius: 5px;
+                }
+    </style>
+
+
+</head>
+<body>
+
+
+    <form asp-controller="Home" asp-action="Index">
+        <div class="frm">
+            <textarea id="result" asp-for="Speech"></textarea>
+            <button onmouseup="StopConverting();" onmousedown="startConverting();"><i class="fas fa-microphone-alt"></i>Tener premuto per parlare</button>
+        </div>
+    </form>
+
+
+    <div>
+        <table class="MyTable">
+            @*<thead>
+                    <tr>
+                        <td style="width:25%">Nome</td>
+                        <td style="width:25%">Cognome</td>
+                        <td style="width:25%">Età</td>
+                        <td style="width:25%">Scuola</td>
+                    </tr>
+                </thead>*@
+
+
+            <tbody>
+                @if (Model.Tabella != null) {
+                    @for (int a = 0; a < Model.Tabella.GetLength(0); a++) {
+                        <tr>
+                            @for (int b = 0; b < Model.Tabella.GetLength(1); b++) {
+                                <td>@Model.Tabella[a, b]</td>
+                            }
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <script type="text/javascript">
+
+        var r = document.getElementById('result');
+        var speechRecognizer = new webkitSpeechRecognition();
+
+        function startConverting(stop) {
+
+            if ('webkitSpeechRecognition' in window) {
+
+                speechRecognizer.continuous = true;
+                speechRecognizer.interimResults = true;
+                speechRecognizer.lang = 'it-IT';
+                speechRecognizer.start();
+
+                var finalTranscripts = '';
+
+                speechRecognizer.onresult = function (event) {
+                    var interimTranscripts = '';
+                    for (var i = event.resultIndex; i < event.results.length; i++) {
+                        var transcript = event.results[i][0].transcript;
+                        transcript.replace("\n", "<br>");
+                        if (event.results[i].isFinal) {
+                            finalTranscripts += transcript;
+                        } else {
+                            interimTranscripts += transcript;
+                        }
+                    }
+
+                    r.value = finalTranscripts + interimTranscripts;
+
+                };
+                speechRecognizer.onerror = function (event) {
+                };
+            } else {
+                r.value = 'Your browser is not supported. If google chrome, please upgrade!';
+            }
+        }
+        function StopConverting() {
+
+            speechRecognizer.stop();
+        }
+
+
+
+
+
+    </script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+</body>
+</html>
